@@ -175,7 +175,7 @@ def channel_details(channel_id):
     return "upload completed successfully"
 
 
-# Table creation for channels,playlists, videos, comments
+# Table creation for channels 
 def channels_table():
     # SQL connection
     mydb = mysql.connector.connect(host="localhost",
@@ -234,7 +234,7 @@ def channels_table():
         except:
             st.write("Channels values are already inserted")
 
-
+#playlist table creation and data insertion
 def playlists_table():
     # SQL connection
     mydb = mysql.connector.connect(host="localhost",
@@ -293,7 +293,7 @@ def playlists_table():
         except:
             st.write("Playlists values are already inserted")
 
-
+#video table creation and insertion
 def videos_table():
     # SQL connection
     mydb = mysql.connector.connect(host="localhost",
@@ -388,7 +388,7 @@ def videos_table():
         except:
             st.write("videos values already inserted in the table")
 
-
+#Table creation and insertion of comments
 def comments_table():
     # SQL connection
     mydb = mysql.connector.connect(host="localhost",
@@ -454,9 +454,6 @@ def tables():
     comments_table()
     return "Tables Created successfully"
 
-
-
-
 def show_channels_table():
     ch_list = []
     db = client["Youtube_data"]
@@ -499,6 +496,7 @@ def show_comments_table():
     comments_table = st.dataframe(com_list)
     return comments_table
 
+#Streamlit Code
 
 with st.sidebar:
     st.title(":red[YOUTUBE DATA HARVESTING AND WAREHOUSING]")
@@ -563,6 +561,7 @@ question = st.selectbox(
      '9.What is the average duration of all videos in each channel, and what are their corresponding channel names?',
      '10.Which videos have the highest number of comments, and what are their corresponding channel names?'))
 
+#Data Analysis Questions
 
 if question=='---------Select the questions---------':
     pass
@@ -631,18 +630,25 @@ elif question == '8.What are the names of all the channels that have published v
     st.write(pd.DataFrame(t8, columns=["Name", "Video Publised On", "ChannelName"]))
 
 elif question == '9.What is the average duration of all videos in each channel, and what are their corresponding channel names?':
-    query9 = "SELECT Channel_Name as ChannelName, AVG(Duration) AS average_duration FROM videos GROUP BY Channel_Name;"
+    query9 = """
+    SELECT
+        Channel_Name as ChannelTitle,
+        SEC_TO_TIME(AVG(TIME_TO_SEC(STR_TO_DATE(Duration, 'PT%iM%sS')))) AS average_duration
+    FROM videos
+    GROUP BY Channel_Name;
+    """
     cursor.execute(query9)
-
     t9 = cursor.fetchall()
     mydb.commit()
     t9 = pd.DataFrame(t9, columns=['ChannelTitle', 'Average Duration'])
+
     T9 = []
     for index, row in t9.iterrows():
         channel_title = row['ChannelTitle']
         average_duration = row['Average Duration']
-        average_duration_str = str(average_duration)
-        T9.append({"Channel Title": channel_title, "Average Duration": average_duration_str})
+        T9.append({"Channel Title": channel_title, "Average Duration": str(average_duration)})
+
+    # Display the DataFrame
     st.write(pd.DataFrame(T9))
 
 elif question == '10.	Which videos have the highest number of comments, and what are their corresponding channel names?':
