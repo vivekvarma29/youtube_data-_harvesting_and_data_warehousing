@@ -1,19 +1,17 @@
+from googleapiclient.discovery import build
 import pymongo
 import mysql.connector
 import pandas as pd
 import streamlit as st
-from googleapiclient.discovery import build
 
 
 # API key connection
 def Api_connect():
     Api_Id = "AIzaSyDLs5a-sARvyB7Qw-vZ9c-bEPKqft1FTh4"
-
     api_service_name = "youtube"
     api_version = "v3"
     youtube = build(api_service_name, api_version, developerKey=Api_Id)
     return youtube
-
 
 youtube = Api_connect()
 
@@ -159,7 +157,6 @@ db = client["Youtube_data"]
 
 
 # upload to MongoDB
-
 def channel_details(channel_id):
     ch_details = get_channel_info(channel_id)
     pl_details = get_playlist_info(channel_id)
@@ -175,7 +172,7 @@ def channel_details(channel_id):
     return "upload completed successfully"
 
 
-# Table creation for channels 
+# Table creation for channels
 def channels_table():
     # SQL connection
     mydb = mysql.connector.connect(host="localhost",
@@ -203,38 +200,9 @@ def channels_table():
     except:
         st.write("Channels Table already created")
 
-    ch_list = []
-    db = client["Youtube_data"]
-    coll1 = db["channel_details"]
-    for ch_data in coll1.find({}, {"_id": 0, "channel_information": 1}):
-        ch_list.append(ch_data["channel_information"])
-    df = pd.DataFrame(ch_list)
 
-    for index, row in df.iterrows():
-        insert_query = '''INSERT into channels(Channel_Name,
-                                                    Channel_Id,
-                                                    Subscription_Count,
-                                                    Views,
-                                                    Total_Videos,
-                                                    Channel_Description,
-                                                    Playlist_Id)
-                                        VALUES(%s,%s,%s,%s,%s,%s,%s)'''
 
-        values = (
-            row['Channel_Name'],
-            row['Channel_Id'],
-            row['Subscription_Count'],
-            row['Views'],
-            row['Total_Videos'],
-            row['Channel_Description'],
-            row['Playlist_Id'])
-        try:
-            cursor.execute(insert_query, values)
-            mydb.commit()
-        except:
-            st.write("Channels values are already inserted")
-
-#playlist table creation and data insertion
+# Table creation for playlists
 def playlists_table():
     # SQL connection
     mydb = mysql.connector.connect(host="localhost",
@@ -262,38 +230,7 @@ def playlists_table():
     except:
         st.write("Playlists Table already created")
 
-    db = client["Youtube_data"]
-    coll1 = db["channel_details"]
-    pl_list = []
-    for pl_data in coll1.find({}, {"_id": 0, "playlist_information": 1}):
-        for i in range(len(pl_data["playlist_information"])):
-            pl_list.append(pl_data["playlist_information"][i])
-    df = pd.DataFrame(pl_list)
-
-    for index, row in df.iterrows():
-        insert_query = '''INSERT into playlists(PlaylistId,
-                                                    Title,
-                                                    ChannelId,
-                                                    ChannelName,
-                                                    PublishedAt,
-                                                    VideoCount)
-                                        VALUES(%s,%s,%s,%s,%s,%s)'''
-        values = (
-            row['PlaylistId'],
-            row['Title'],
-            row['ChannelId'],
-            row['ChannelName'],
-            row['PublishedAt'],
-            row['VideoCount'])
-
-        try:
-
-            cursor.execute(insert_query, values)
-            mydb.commit()
-        except:
-            st.write("Playlists values are already inserted")
-
-#video table creation and insertion
+# Table creation for videos
 def videos_table():
     # SQL connection
     mydb = mysql.connector.connect(host="localhost",
@@ -333,62 +270,7 @@ def videos_table():
     except:
         st.write("Videos Table already created")
 
-    vi_list = []
-    db = client["Youtube_data"]
-    coll1 = db["channel_details"]
-    for vi_data in coll1.find({}, {"_id": 0, "video_information": 1}):
-        for i in range(len(vi_data["video_information"])):
-            vi_list.append(vi_data["video_information"][i])
-    df2 = pd.DataFrame(vi_list)
-
-    for index, row in df2.iterrows():
-        insert_query = '''
-                    INSERT INTO videos (Channel_Name,
-                        Channel_Id,
-                        Video_Id, 
-                        Title, 
-                        Tags,
-                        Thumbnail,
-                        Description, 
-                        Published_Date,
-                        Duration, 
-                        Views, 
-                        Likes,
-                        Dislikes,
-                        Comments,
-                        Favorite_Count, 
-                        Definition, 
-                        Caption_Status 
-                        )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-
-                '''
-        tags_value = str(row['Tags'])
-        values = (
-            row['Channel_Name'],
-            row['Channel_Id'],
-            row['Video_Id'],
-            row['Title'],
-            tags_value,
-            row['Thumbnail'],
-            row['Description'],
-            row['Published_Date'],
-            row['Duration'],
-            row['Views'],
-            row['Likes'],
-            row['Dislikes'],
-            row['Comments'],
-            row['Favorite_Count'],
-            row['Definition'],
-            row['Caption_Status'])
-
-        try:
-            cursor.execute(insert_query, values)
-            mydb.commit()
-        except:
-            st.write("videos values already inserted in the table")
-
-#Table creation and insertion of comments
+# Table creation for comments
 def comments_table():
     # SQL connection
     mydb = mysql.connector.connect(host="localhost",
@@ -415,38 +297,8 @@ def comments_table():
     except:
         st.write("Comments Table already created")
 
-    com_list = []
-    db = client["Youtube_data"]
-    coll1 = db["channel_details"]
-    for com_data in coll1.find({}, {"_id": 0, "comment_information": 1}):
-        for i in range(len(com_data["comment_information"])):
-            com_list.append(com_data["comment_information"][i])
-    df3 = pd.DataFrame(com_list)
 
-    for index, row in df3.iterrows():
-        insert_query = '''
-                INSERT INTO comments (Comment_Id,
-                                      Video_Id ,
-                                      Comment_Text,
-                                      Comment_Author,
-                                      Comment_Published)
-                VALUES (%s, %s, %s, %s, %s)
-
-            '''
-        values = (
-            row['Comment_Id'],
-            row['Video_Id'],
-            row['Comment_Text'],
-            row['Comment_Author'],
-            row['Comment_Published']
-        )
-        try:
-            cursor.execute(insert_query, values)
-            mydb.commit()
-        except:
-            st.write("This comments are already exist in comments table")
-
-
+#All tables calling function
 def tables():
     channels_table()
     playlists_table()
@@ -454,6 +306,8 @@ def tables():
     comments_table()
     return "Tables Created successfully"
 
+
+#shows the channels information
 def show_channels_table():
     ch_list = []
     db = client["Youtube_data"]
@@ -463,7 +317,7 @@ def show_channels_table():
     channels_table = st.dataframe(ch_list)
     return channels_table
 
-
+#shows the playlists information
 def show_playlists_table():
     db = client["Youtube_data"]
     coll1 = db["channel_details"]
@@ -474,7 +328,7 @@ def show_playlists_table():
     playlists_table = st.dataframe(pl_list)
     return playlists_table
 
-
+#shows the videos information
 def show_videos_table():
     vi_list = []
     db = client["Youtube_data"]
@@ -485,7 +339,7 @@ def show_videos_table():
     videos_table = st.dataframe(vi_list)
     return videos_table
 
-
+#shows the comments information
 def show_comments_table():
     com_list = []
     db = client["Youtube_data"]
@@ -496,46 +350,218 @@ def show_comments_table():
     comments_table = st.dataframe(com_list)
     return comments_table
 
-#Streamlit Code
-
-with st.sidebar:
-    st.title(":red[YOUTUBE DATA HARVESTING AND WAREHOUSING]")
-
-    show_table = st.radio("SELECT THE TABLE FOR VIEW",
-                          ("----Select----",":green[channels]", ":orange[playlists]", ":red[videos]", ":blue[comments]"))
-
-
-
-    if show_table == ":green[channels]":
-        show_channels_table()
-    elif show_table == ":orange[playlists]":
-        show_playlists_table()
-    elif show_table == ":red[videos]":
-        show_videos_table()
-    elif show_table == ":blue[comments]":
-        show_comments_table()
-
+#stream lit text input for channel id
 channel_id = st.text_input("Enter the Channel id")
 channels = channel_id.split(',')
 channels = [ch.strip() for ch in channels if ch]
 
-if st.button("Collect and Store data"):
-    for channel in channels:
-        ch_ids = []
+#stream lit code for UI
+def streamlit_code():
+
+    with st.sidebar:
+        st.title(":red[YOUTUBE DATA HARVESTING AND WAREHOUSING]")
+
+        show_table = st.radio("SELECT THE TABLE FOR VIEW",
+                              ("----Select----",":green[channels]", ":orange[playlists]", ":red[videos]", ":blue[comments]"))
+
+        if show_table == ":green[channels]":
+            show_channels_table()
+        elif show_table == ":orange[playlists]":
+            show_playlists_table()
+        elif show_table == ":red[videos]":
+            show_videos_table()
+        elif show_table == ":blue[comments]":
+            show_comments_table()
+
+#Collects and store data in mongo db
+
+    if st.button("Collect and Store data"):
+        for channel in channels:
+            ch_ids = []
+            db = client["Youtube_data"]
+            coll1 = db["channel_details"]
+            for ch_data in coll1.find({}, {"_id": 0, "channel_information": 1}):
+                ch_ids.append(ch_data["channel_information"]["Channel_Id"])
+            if channel in ch_ids:
+                st.success("Channel details of the given channel id: " + channel + " already exists")
+            else:
+                output = channel_details(channel)
+                st.success(output)
+
+#It shows store channels details
+    if st.button("view stored channels"):
+        display_channel_id_name = []
         db = client["Youtube_data"]
         coll1 = db["channel_details"]
+        for chan_data in coll1.find({}, {"_id": 0, "channel_information": 1}):
+            d={'Channel Name':chan_data["channel_information"]["Channel_Name"],
+               'Channel Id':chan_data["channel_information"]["Channel_Id"],
+               'Subscription_Count':chan_data["channel_information"]["Subscription_Count"],
+               'Views':chan_data["channel_information"]["Views"],
+               'Total Videos':chan_data["channel_information"]["Total_Videos"]}
+
+            display_channel_id_name.append(d)
+
+        channels_details = st.dataframe(display_channel_id_name)
+        return channels_details
+
+streamlit_code()
+
+
+def migrate_sql():
+    if st.button("Migrate to SQL"):
+        # mysql connection
+        mydb = mysql.connector.connect(host="localhost",
+                                       user="root",
+                                       password="0000",
+                                       database="youtube_database",
+                                       port="3306"
+                                       )
+        cursor = mydb.cursor()
+        # Assuming you have a specific channel ID you want to insert, let's call it 'selected_channel_id'
+        selected_channel_id = channels
+
+        db = client["Youtube_data"]
+        coll1 = db["channel_details"]
+
+    # Iterate over MongoDB channels and insert data into MySQL only for the selected channel ID
         for ch_data in coll1.find({}, {"_id": 0, "channel_information": 1}):
-            ch_ids.append(ch_data["channel_information"]["Channel_Id"])
-        if channel in ch_ids:
-            st.success("Channel details of the given channel id: " + channel + " already exists")
-        else:
-            output = channel_details(channel)
-            st.success(output)
+            if ch_data["channel_information"]["Channel_Id"] in selected_channel_id:
+                ch_details = ch_data["channel_information"]
+                pl_details = get_playlist_info(ch_details["Channel_Id"])
+                vi_ids = get_channel_videos(ch_details["Channel_Id"])
+                vi_details = get_video_info(vi_ids)
+                com_details = get_comment_info(vi_ids)
 
-if st.button("Migrate to SQL"):
-    display = tables()
-    st.success(display)
+    # Insert into MySQL channels table
+                insert_query_channels = '''
+                    INSERT INTO channels(Channel_Name,
+                                        Channel_Id,
+                                        Subscription_Count,
+                                        Views,
+                                        Total_Videos,
+                                        Channel_Description,
+                                        Playlist_Id)
+                    VALUES(%s,%s,%s,%s,%s,%s,%s)
+                '''
+                values_channels = (
+                    ch_details['Channel_Name'],
+                    ch_details['Channel_Id'],
+                    ch_details['Subscription_Count'],
+                    ch_details['Views'],
+                    ch_details['Total_Videos'],
+                    ch_details['Channel_Description'],
+                    ch_details['Playlist_Id'])
+                try:
+                    cursor.execute(insert_query_channels, values_channels)
+                    mydb.commit()
 
+                except Exception as e:
+                    st.error(f"Error inserting channel data into MySQL: {e}")
+
+
+    # Insert into MySQL playlists table
+                insert_query_playlists = '''
+                    INSERT INTO playlists(PlaylistId,
+                                          Title,
+                                          ChannelId,
+                                          ChannelName,
+                                          PublishedAt,
+                                          VideoCount)
+                    VALUES(%s,%s,%s,%s,%s,%s)
+                '''
+                for pl_data in pl_details:
+                    values_playlists = (
+                        pl_data['PlaylistId'],
+                        pl_data['Title'],
+                        pl_data['ChannelId'],
+                        pl_data['ChannelName'],
+                        pl_data['PublishedAt'],
+                        pl_data['VideoCount'])
+                    try:
+                        cursor.execute(insert_query_playlists, values_playlists)
+                        mydb.commit()
+
+                    except Exception as e:
+                        st.error(f"Error inserting playlists data into MySQL: {e}")
+
+    # Insert into MySQL videos table
+                insert_query_videos = '''
+                    INSERT INTO videos(Channel_Name,
+                                       Channel_Id,
+                                       Video_Id,
+                                       Title,
+                                       Tags,
+                                       Thumbnail,
+                                       Description,
+                                       Published_Date,
+                                       Duration,
+                                       Views,
+                                       Likes,
+                                       Dislikes,
+                                       Comments,
+                                       Favorite_Count,
+                                       Definition,
+                                       Caption_Status)
+                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                '''
+                for vi_data in vi_details:
+                    tags_value = str(vi_data['Tags'])
+                    values_videos = (
+                        vi_data['Channel_Name'],
+                        vi_data['Channel_Id'],
+                        vi_data['Video_Id'],
+                        vi_data['Title'],
+                        tags_value,
+                        vi_data['Thumbnail'],
+                        vi_data['Description'],
+                        vi_data['Published_Date'],
+                        vi_data['Duration'],
+                        vi_data['Views'],
+                        vi_data['Likes'],
+                        vi_data['Dislikes'],
+                        vi_data['Comments'],
+                        vi_data['Favorite_Count'],
+                        vi_data['Definition'],
+                        vi_data['Caption_Status'])
+                    try:
+                        cursor.execute(insert_query_videos, values_videos)
+                        mydb.commit()
+
+                    except Exception as e:
+                        st.error(f"Error inserting videos data into MySQL: {e}")
+
+    # Insert into MySQL comments table
+                insert_query_comments = '''
+                    INSERT INTO comments(Comment_Id,
+                                         Video_Id,
+                                         Comment_Text,
+                                         Comment_Author,
+                                         Comment_Published)
+                    VALUES(%s,%s,%s,%s,%s)
+                '''
+                for com_data in com_details:
+                    values_comments = (
+                        com_data['Comment_Id'],
+                        com_data['Video_Id'],
+                        com_data['Comment_Text'],
+                        com_data['Comment_Author'],
+                        com_data['Comment_Published'])
+                    try:
+                        cursor.execute(insert_query_comments, values_comments)
+                        mydb.commit()
+
+                    except Exception as e:
+                        st.error(f"Error inserting comments data into MySQL: {e}")
+
+                # Close the MySQL cursor
+                cursor.close()
+
+        # Close the MySQL connection
+        mydb.close()
+        st.success("Migrated Successfully")
+
+migrate_sql()
 
 
 # SQL connection
@@ -561,7 +587,6 @@ question = st.selectbox(
      '9.What is the average duration of all videos in each channel, and what are their corresponding channel names?',
      '10.Which videos have the highest number of comments, and what are their corresponding channel names?'))
 
-#Data Analysis Questions
 
 if question=='---------Select the questions---------':
     pass
@@ -651,7 +676,8 @@ elif question == '9.What is the average duration of all videos in each channel, 
     # Display the DataFrame
     st.write(pd.DataFrame(T9))
 
-elif question == '10.	Which videos have the highest number of comments, and what are their corresponding channel names?':
+
+elif question == '10.Which videos have the highest number of comments, and what are their corresponding channel names?':
     query10 = '''select Title as VideoTitle, Channel_Name as ChannelName, Comments as Comments from videos
                        where Comments is not null order by Comments desc;'''
     cursor.execute(query10)
