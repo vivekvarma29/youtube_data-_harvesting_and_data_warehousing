@@ -37,7 +37,7 @@ def get_channel_info(channel_id):
         return data
 
 
-# get playlist ids
+# get playlist info
 def get_playlist_info(channel_id):
     All_data = []
     next_page_token = None
@@ -156,7 +156,7 @@ client = pymongo.MongoClient("mongodb://localhost:27017")
 db = client["Youtube_data"]
 
 
-# upload to MongoDB
+# upload all details to MongoDB
 def channel_details(channel_id):
     ch_details = get_channel_info(channel_id)
     pl_details = get_playlist_info(channel_id)
