@@ -7,7 +7,7 @@ import streamlit as st
 
 # API key connection
 def Api_connect():
-    Api_Id = "AIzaSyDLs5a-sARvyB7Qw-vZ9c-bEPKqft1FTh4"
+    Api_Id = "" #your api key
     api_service_name = "youtube"
     api_version = "v3"
     youtube = build(api_service_name, api_version, developerKey=Api_Id)
